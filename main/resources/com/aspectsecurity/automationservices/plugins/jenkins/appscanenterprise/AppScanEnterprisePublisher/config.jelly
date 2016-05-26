@@ -1,0 +1,42 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <!--
+    This Jelly script is used to produce the global configuration option.
+
+    Jenkins uses a set of tag libraries to provide uniformity in forms.
+    To determine where this tag is defined, first check the namespace URI,
+    and then look under $JENKINS/views/. For example, <f:section> is defined
+    in $JENKINS/views/lib/form/section.jelly.
+
+    It's also often useful to just check other similar scripts to see what
+    tags they use. Views are always organized according to its owner class,
+    so it should be straightforward to find them.
+  -->
+  <f:section title="AppScan Enterprise Configuration">
+      
+	<f:entry field="installation" title="AppScan Source installation">
+        <f:select/>
+    </f:entry>
+    
+    <f:entry field="acceptSSL" title="Accept SSL Errors">
+		<f:checkbox default="false" value="${it.acceptSSL}" />
+	</f:entry>
+<!--
+	<f:entry field="debug" title="ASE_URL:">
+		<f:textbox value="${it.debug}"/>
+	</f:entry>
+
+	<f:entry field="availableFolders" title="Available folders:">
+		<f:textarea value="${it.availableFolders}" readonly="readonly" disabled="disabled"/>
+	</f:entry>
+	
+	<f:entry field="publishTo" title="Publish to:">
+		<f:textbox value="${it.publishTo}"/>
+	</f:entry>
+-->	
+	<f:entry field="selected" title="Select One:">
+		<f:select value="${it.selected}"/>
+	</f:entry>
+
+  </f:section>
+</j:jelly>
