@@ -3,7 +3,7 @@
   <f:entry title="${%Name}" field="name">
     <f:textbox />
   </f:entry>
-  <f:entry title="AppScan Source Installation Directory - ASE Publisher" field="home">
+  <f:entry title="AppScan Enterprise" field="home">
     <f:textbox />
   </f:entry>
 </j:jelly>

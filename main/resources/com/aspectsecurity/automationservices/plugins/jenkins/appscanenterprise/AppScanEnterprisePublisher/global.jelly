@@ -30,6 +30,10 @@
         <f:password value="${it.ASE_Pword}"/>
     </f:entry>
     
-    <f:validateButton title="${%Test Connection}" progress="${%Testing...}" method="testConnection" with="ASE_URL,ASE_Uname,ASE_Pword" />
+    <f:entry field="ASEC_URL" title="AppScan Enterprise Console Hostname/Domain name">
+        <f:textbox value="${it.ASEC_URL}"/>
+    </f:entry>
+    
+    <f:validateButton title="${%Test Connection}" progress="${%Testing...}" method="testConnection" with="ASEC_URL,ASE_Uname,ASE_Pword" />
   </f:section>
 </j:jelly>

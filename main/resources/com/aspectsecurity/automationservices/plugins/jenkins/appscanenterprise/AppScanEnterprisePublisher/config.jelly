@@ -18,22 +18,14 @@
         <f:select/>
     </f:entry>
     
+    <f:entry field="disableScan" title="Disable Scan">
+		<f:checkbox default="false" value="${it.disableScan}" />
+	</f:entry>
+    
     <f:entry field="acceptSSL" title="Accept SSL Errors">
 		<f:checkbox default="false" value="${it.acceptSSL}" />
 	</f:entry>
-<!--
-	<f:entry field="debug" title="ASE_URL:">
-		<f:textbox value="${it.debug}"/>
-	</f:entry>
 
-	<f:entry field="availableFolders" title="Available folders:">
-		<f:textarea value="${it.availableFolders}" readonly="readonly" disabled="disabled"/>
-	</f:entry>
-	
-	<f:entry field="publishTo" title="Publish to:">
-		<f:textbox value="${it.publishTo}"/>
-	</f:entry>
--->	
 	<f:entry field="selected" title="Select One:">
 		<f:select value="${it.selected}"/>
 	</f:entry>

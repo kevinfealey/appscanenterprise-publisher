@@ -2,8 +2,6 @@ package com.aspectsecurity.automationservices.appscanenterprise.utilities;
 
 import java.io.IOException;
 
-import javax.ws.rs.client.Invocation;
-
 import com.aspectsecurity.automationservices.plugins.jenkins.appscanenterprise.*;
 
 import hudson.AbortException;

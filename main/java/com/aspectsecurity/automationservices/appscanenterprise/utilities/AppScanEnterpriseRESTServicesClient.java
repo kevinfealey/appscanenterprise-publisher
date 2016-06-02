@@ -2,7 +2,6 @@ package com.aspectsecurity.automationservices.appscanenterprise.utilities;
 
 
 import java.io.InputStream;
-import java.io.StringReader;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
@@ -30,8 +29,6 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.transform.stream.StreamSource;
-
 import com.aspectsecurity.automationservices.appscanenterprise.jaxb.generated.Folder;
 import com.aspectsecurity.automationservices.appscanenterprise.jaxb.generated.Folders;
 
@@ -75,7 +72,6 @@ public class AppScanEnterpriseRESTServicesClient {
 	
 	private WebTarget setupRESTClient(){
 		System.out.println("Creating new client");
-		//Client client = ClientBuilder.newBuilder().sslContext(allowSelfSignedCertificates()).build();
         if(allowInvalidSSL){
         	client = ClientBuilder.newBuilder().sslContext(allowSelfSignedCertificates()).hostnameVerifier(new HostnameVerifier(){
             @Override
@@ -98,9 +94,7 @@ public class AppScanEnterpriseRESTServicesClient {
 	
 	private int login(String username, String password){
 		System.out.println("Logging in");
-		//String fullLoginPath = this.base_url + libertyLoginPath;	
 		WebTarget target = setupRESTClient().path(libertyLoginPath);
-		
 		
 		System.out.println("Creating form params");
 		Form form = new Form();
@@ -135,7 +129,6 @@ public class AppScanEnterpriseRESTServicesClient {
 	private void logout(){
 		System.out.println("Logging out...");
 		WebTarget target = setupRESTClient().path(libertyLogoutPath);
-		//WebTarget target = setupRESTClient().path(this.base_url+libertyLogoutPath);
 		System.out.println("Sending request...");		
 		Response response = target.request().cookie(ascSession).cookie(aspSession).get();
 		if (response.getStatus() == 200){
@@ -157,7 +150,6 @@ public class AppScanEnterpriseRESTServicesClient {
 		login();
 		WebTarget target = setupRESTClient().path(path);
 		Response response = target.request().cookie(ascSession).cookie(aspSession).get();
-		//System.out.println(response.readEntity(String.class));
 
 		return getFoldersFromResponse(response);
 	}
@@ -270,15 +262,5 @@ public class AppScanEnterpriseRESTServicesClient {
 				e1.printStackTrace();
 			}
             return ctx;
-        //SSLContext.setDefault(ctx);
-	}
-	/*
-	Invocation.Builder invocationBuilder =
-	        target.request(MediaType.APPLICATION_XML);
-	invocationBuilder.header("some-header", "true");
-	invocationBuilder.cookie(ascSession).cookie(aspSession);
-	
-
-	Response response = invocationBuilder.get();
-	*/
+	}	
 }

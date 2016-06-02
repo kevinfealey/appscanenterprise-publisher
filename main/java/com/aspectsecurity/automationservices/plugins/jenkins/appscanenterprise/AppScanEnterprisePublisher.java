@@ -10,14 +10,11 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.model.AbstractProject;
 import hudson.model.Computer;
-import hudson.model.Descriptor;
 import hudson.model.Node;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.tasks.Builder;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
-import hudson.tasks.Recorder;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import jenkins.model.Jenkins;
@@ -37,14 +34,9 @@ import org.kohsuke.stapler.QueryParameter;
 import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 
@@ -54,10 +46,11 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
     
     private PrintStream logger;
     
-    private String publishTo, availableFolders, debug;
+    private String publishTo;
     
     private static String selected;
     private String installation;
+    private boolean disableScan;
     private boolean acceptSSL;
 
     /**
@@ -65,27 +58,14 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
      */
    
 	@DataBoundConstructor
-    public AppScanEnterprisePublisher(String selected, String installation, boolean acceptSSL){
-		//this.publishTo = publishTo;
+    public AppScanEnterprisePublisher(String selected, String installation, boolean disableScan, boolean acceptSSL){
     	this.selected = selected;
     	this.installation = installation;
+    	this.disableScan = disableScan;
     	this.acceptSSL = acceptSSL;
     	initAvailableFolders();
-    	//initOutput();
-    	//this.availableFolders = availableFolders;
-    	//this.debug = debug;
     }
-	
-/*	@DataBoundConstructor
-    public AppScanEnterprisePublisher(String installation, boolean acceptSSL){
-    	//this.publishTo = publishTo;
-    	//this.selected = selected;
-    	this.installation = installation;
-    	this.acceptSSL = acceptSSL;
-    	//initAvailableFolders();
-    	//this.availableFolders = availableFolders;
-    }*/
-    
+	    
     @Override
     public void perform(Run<?,?> build, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException{
     	Computer computer = Computer.currentComputer();
@@ -99,60 +79,58 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
             throws InterruptedException, IOException {
 
     	logger = listener.getLogger();
-    	//Implementation happens here
-		//Determine if we need to use acceptssl flag
-		String acceptSSLValue="";
-		if(acceptSSL){
-			acceptSSLValue="-acceptssl";
-		}
-		
-		
-		//get workspace path from Environment Variables
-		//String workspacePath = envVars.get("WORKSPACE") + "/builds";
-		//logger.println("Workspace: " + workspacePath);
-		
-		//get build number from Environment Variables
-		// buildNumber = envVars.get("BUILD_NUMBER");
-		//logger.println("BuildNumber: " + buildNumber);
+    	
+    	if(!this.disableScan){
+    		
+    	
+    		//Implementation happens here
+    		//Determine if we need to use acceptssl flag
+    		String acceptSSLValue="";
+    		if(acceptSSL){
+    			acceptSSLValue="-acceptssl";
+    		}
 				
-		//Append build number to workspacePath for full .ozasmt path file
-		//String asmtFilePath = workspacePath + "/" + buildNumber;
-		String asmtFilePath = "C:/AppScan_Assessments/" ;
+    		//String asmtFilePath = "C:/AppScan_Assessments/" ;
+    		String asmtFilePath = "C:/Program Files (x86)/Jenkins/jobs/Webgoat_mvn/builds";
 		
-		//Search directory for assessment file
-		logger.println("Searching " + asmtFilePath + " for .ozasmt file");
-		File directory = new File(asmtFilePath);
-		File[] extMatches = directory.listFiles(new FilenameFilter()
-			{
-				@Override
-				public boolean accept(File dir, String name) {
-					// TODO Auto-generated method stub
+    		//Search directory for assessment file
+    		logger.println("Searching " + asmtFilePath + " for .ozasmt file");
+    		File directory = new File(asmtFilePath);
+    		File[] extMatches = directory.listFiles(new FilenameFilter()
+				{
+					@Override
+					public boolean accept(File dir, String name) {
+						// TODO Auto-generated method stub
 					
 					return name.endsWith(".ozasmt");
 					//return false;
-				}
-			});
+					}
+				});
 		
-		String assessmentFile;
+    		String assessmentFile;
 		
-		if (extMatches.length == 1){
-			assessmentFile = extMatches[0].getAbsolutePath();
+    		if (extMatches.length == 1){
+    			assessmentFile = extMatches[0].getAbsolutePath();
 		
-		//Build the script file we'll pass into the AppScan Source CLI
-				//String cliScriptContent = "login_file " + ((DescriptorImpl) getDescriptor()).getASE_URL() + " " + ((DescriptorImpl) getDescriptor()).getLoginTokenFilePath() + " " + acceptSSLValue + System.lineSeparator();
-				//String cliScriptContent = "login_file " + getDescriptor().getASE_URL() + " " + getDescriptor().getLoginTokenFilePath() + " " + acceptSSLValue + System.lineSeparator();
-				String cliScriptContent = "login_file " + "https://vagrant-2012:9443/ase/" + " " + getDescriptor().getLoginTokenFilePath() + " " + acceptSSLValue + System.lineSeparator();
-				cliScriptContent += "pase " + assessmentFile + System.lineSeparator();
-				
-		    	AppScanSourceExecutor.execute(run, ws, launcher, installation, node, listener, envVars, cliScriptContent);
-		}
-		else if (extMatches.length > 1)
-			logger.println("There is more than one .ozasmt file in " + asmtFilePath);
-		else 
-			logger.println("An .ozasmt file could not be found in " + asmtFilePath);	
+    			//Build the script file we'll pass into the AppScan Source CLI
+					String cliScriptContent = "login_file " + getDescriptor().getASE_URL() + " " + getDescriptor().getLoginTokenFilePath() + " " + acceptSSLValue + System.lineSeparator();
+					cliScriptContent += "pase " + "\"" + assessmentFile + "\"" + " -folder " + selected + System.lineSeparator();
+					logger.println("Executing the following command:" + '\n' + cliScriptContent);
+					AppScanSourceExecutor.execute(run, ws, launcher, installation, node, listener, envVars, cliScriptContent);
+    		}
+    		else if (extMatches.length > 1)
+    			logger.println("There is more than one .ozasmt file in " + asmtFilePath);
+    		else 
+    			logger.println("An .ozasmt file could not be found in " + asmtFilePath);	
 		
+    	} else {
+		logger.println("Publish disabled in configuration. Not publishing assessment.");
+    	}
     }
     
+    /**
+     * We'll use this from the <tt>config.jelly</tt>.
+     */
 	public String getAvailableFolders(){
 		return initAvailableFolders();
 	}
@@ -165,6 +143,10 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
 		return selected;
 	}
 	
+    public void setSelected(String selected) {
+        this.selected = selected;
+    }
+	
 	public String getInstallation() {
         return installation;
     }
@@ -174,6 +156,10 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
         this.installation = installation;
     }
 	
+	 public boolean getDisableScan() {
+	        return disableScan;
+	    }
+
 	public boolean getAcceptSSL() {
         return acceptSSL;
     }
@@ -183,17 +169,8 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
         this.acceptSSL = acceptSSL;
     }
 	
-	public String getDebug() {
-        return debug;
-    }
-	
-	@DataBoundSetter
-    public void setDebug(String debug) {
-        this.debug = debug;
-    }
-	
     public String initAvailableFolders(){
-        	AppScanEnterpriseRESTServicesClient client = new AppScanEnterpriseRESTServicesClient(getDescriptor().getASE_Uname(), getDescriptor().getASE_Pword(), getDescriptor().getASE_URL());
+        	AppScanEnterpriseRESTServicesClient client = new AppScanEnterpriseRESTServicesClient(getDescriptor().getASE_Uname(), getDescriptor().getASE_Pword(), getDescriptor().getASEC_URL());
         	ArrayList<ASEFolder> folders = client.getFolderListing();
         	StringBuilder allFolders = new StringBuilder();
             for (ASEFolder folder : folders) {
@@ -203,10 +180,6 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
             return allFolders.toString();   
     }
     
-    public String initOutput() {
-    	debug = "Output: " + getDescriptor().getASE_Uname() + " " + getDescriptor().getASE_Pword() + " " + getDescriptor().getASE_URL();
-    	return debug; 
-    }
     /*****************************************************************************
      * Descriptor Below
      * @return 
@@ -251,10 +224,10 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
     
     public static ListBoxModel completeSelectedModel(ListBoxModel model, ArrayList<ASEFolder> folders){
     	for (ASEFolder folder : folders) {
-    		if((folder.getId()+"").equals(selected)){
-    			model.add(new ListBoxModel.Option(Util.fixEmptyAndTrim(folder.getFullPath()), folder.getId()+"", true));
+    		if((Util.fixEmptyAndTrim(folder.getFullPath().substring(1))).equals(selected)){
+    			model.add(new ListBoxModel.Option(Util.fixEmptyAndTrim(folder.getFullPath()), Util.fixEmptyAndTrim(folder.getFullPath().substring(1)), true));
     		} else {
-    			model.add(new ListBoxModel.Option(Util.fixEmptyAndTrim(folder.getFullPath()), folder.getId()+"", false));
+    			model.add(new ListBoxModel.Option(Util.fixEmptyAndTrim(folder.getFullPath()), Util.fixEmptyAndTrim(folder.getFullPath().substring(1)), false));
     		}
             
         }
@@ -271,7 +244,7 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
          * <p>
          * If you don't want fields to be persisted, use <tt>transient</tt>.
          */
-    	String LoginTokenFilePath, ASE_Uname, ASE_Pword, ASE_URL;
+    	String LoginTokenFilePath, ASE_Uname, ASE_Pword, ASE_URL, ASEC_URL;
     	ArrayList<ASEFolder> allFolders = new ArrayList<ASEFolder>();
         Jenkins j = Jenkins.getInstance();
 
@@ -301,6 +274,10 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
 		public String getASE_Pword() {
 			return ASE_Pword;
 		}
+		
+		public String getASEC_URL() {
+			return ASEC_URL;
+		}
         
 		public ListBoxModel doFillInstallationItems() {
             ListBoxModel model = new ListBoxModel();
@@ -312,7 +289,7 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
 
 		public ListBoxModel doFillSelectedItems() {
             ListBoxModel model = new ListBoxModel();
-            if(!ASE_Uname.equals("") && !ASE_URL.equals("")){
+            if(!ASE_Uname.equals("") && !ASEC_URL.equals("")){
             	ArrayList<ASEFolder> folders = getFolderListing();
             	model = completeSelectedModel(model, folders);
 	           // for (ASEFolder folder : folders) {
@@ -325,7 +302,7 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
         
 		public ListBoxModel doFillPublishToItems() {
             ListBoxModel model = new ListBoxModel();
-            if(!ASE_Uname.equals("") && !ASE_URL.equals("")){
+            if(!ASE_Uname.equals("") && !ASEC_URL.equals("")){
             	ArrayList<ASEFolder> folders = getFolderListing();
 	            for (ASEFolder folder : folders) {
 	                model.add(Util.fixEmptyAndTrim(folder.getFullPath()), folder.getId()+"");
@@ -335,12 +312,13 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
         }
 		
 		public ArrayList<ASEFolder> getFolderListing(){
-			if(!ASE_Uname.equals("") && !ASE_URL.equals("")){
-            	AppScanEnterpriseRESTServicesClient client = new AppScanEnterpriseRESTServicesClient(ASE_Uname, ASE_Pword, ASE_URL);
+			if(!ASE_Uname.equals("") && !ASEC_URL.equals("")){
+            	AppScanEnterpriseRESTServicesClient client = new AppScanEnterpriseRESTServicesClient(ASE_Uname, ASE_Pword, ASEC_URL);
             	return client.getFolderListing();
 			}
 			return null;
 		}
+		
         public FormValidation doCheckASE_URL(@QueryParameter String value)
                 throws IOException, ServletException {
             	if(!value.equals("".trim())){
@@ -348,6 +326,15 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
             	}
          
             return FormValidation.warning("AppScan Enterprise URL is required to publish AppScan Source Assessments.");
+        }
+        
+        public FormValidation doCheckASEC_URL(@QueryParameter String value)
+                throws IOException, ServletException {
+            	if(!value.equals("".trim())){
+            		return FormValidation.ok();
+            	}
+         
+            return FormValidation.warning("AppScan Enterprise Console URL is required to load AppScan Enterprise folder structure.");
         }
         
         public FormValidation doCheckASE_Uname(@QueryParameter String value)
@@ -359,6 +346,7 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
             return FormValidation.warning("AppScan Enterprise Username is required to publish AppScan Source Assessments.");
         }
         
+        
         public FormValidation doCheckPublishTo(@QueryParameter String value)
                 throws IOException, ServletException {
         	for(ASEFolder folder : allFolders){
@@ -369,9 +357,9 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
             return FormValidation.errorWithMarkup("Please provide a folder that exists on the ASE server to publish assessments to. If no options are displayed above, ASE cannot be reached. Please configure the AppScan Enterprise credentials and URL in <a href=\""+ j.getRootUrl() +"configure\" target=\"_new\">the system configuration.</a>.");
         }
         
-        public FormValidation doTestConnection(@QueryParameter("ASE_URL") final String ASE_URL,
+        public FormValidation doTestConnection(@QueryParameter("ASEC_URL") final String ASEC_URL,
         		@QueryParameter("ASE_Uname") final String ASE_Uname, @QueryParameter("ASE_Pword") final String ASE_Pword ) throws IOException, ServletException {
-        	AppScanEnterpriseRESTServicesClient client = new AppScanEnterpriseRESTServicesClient(ASE_Uname, ASE_Pword, ASE_URL);
+        	AppScanEnterpriseRESTServicesClient client = new AppScanEnterpriseRESTServicesClient(ASE_Uname, ASE_Pword, ASEC_URL);
         	int responseCode = client.testConnection();
         	if( responseCode == 200){
         		return FormValidation.ok("Success");	
@@ -403,6 +391,7 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
         	ASE_URL = formData.getString("ASE_URL");
         	ASE_Uname = formData.getString("ASE_Uname");
         	ASE_Pword = formData.getString("ASE_Pword");
+        	ASEC_URL = formData.getString("ASEC_URL");
             // ^Can also use req.bindJSON(this, formData);
             //  (easier when there are many fields; need set* methods for this, like setUseFrench)
             save();

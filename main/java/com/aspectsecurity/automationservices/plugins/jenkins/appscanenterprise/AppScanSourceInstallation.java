@@ -1,24 +1,20 @@
 package com.aspectsecurity.automationservices.plugins.jenkins.appscanenterprise;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 
-import org.jenkinsci.remoting.RoleChecker;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
-import hudson.Launcher;
 import hudson.Util;
 import hudson.model.TaskListener;
 import hudson.model.Node;
-import hudson.remoting.Callable;
 import hudson.tools.ToolProperty;
 import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolInstallation;
