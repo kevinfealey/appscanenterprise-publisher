@@ -38,6 +38,10 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.CopyOption;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildStep {
@@ -90,8 +94,8 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
     			acceptSSLValue="-acceptssl";
     		}
 				
-    		//String asmtFilePath = "C:/AppScan_Assessments/" ;
-    		String asmtFilePath = "C:/Program Files (x86)/Jenkins/jobs/Webgoat_mvn/builds";
+    		String asmtFilePath = "C:/AppScan_Assessments/" ;
+    		//String asmtFilePath = "C:/Program Files (x86)/Jenkins/jobs/Webgoat_mvn/builds";
 		
     		//Search directory for assessment file
     		logger.println("Searching " + asmtFilePath + " for .ozasmt file");
@@ -106,15 +110,30 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
 					//return false;
 					}
 				});
-		
+    		
+    		
     		String assessmentFile;
 		
     		if (extMatches.length == 1){
     			assessmentFile = extMatches[0].getAbsolutePath();
+    			
+    			int index = extMatches[0].toString().lastIndexOf("\\");
+    			logger.println("index: " + index);
+    			String fileName = extMatches[0].toString().substring(index);
+    			logger.println("fileName: " + fileName);
+    			logger.println("Copying " + extMatches[0] + " from C:\\AppScan Assessments to C:\\Program Files (x86)\\Jenkins\\jobs\\Webgoat_mvn\\builds\\" + envVars.get("BUILD_NUMBER"));
+        		//Path FROM = Paths.get("C:\\AppScan_Assessments");
+    			Path FROM = Paths.get(assessmentFile);
+        		//logger.println("Copying Assessment to C:/Program Files (x86)/Jenkins/jobs/Webgoat_mvn/builds/" + envVars.get("BUILD_NUMBER"));	
+        		Path TO = Paths.get("C:\\Program Files (x86)\\Jenkins\\jobs\\" + envVars.get("JOB_NAME") + "\\builds\\" + envVars.get("BUILD_NUMBER") + "\\" + fileName);
+        		Files.copy(FROM, TO);
+        		
 		
     			//Build the script file we'll pass into the AppScan Source CLI
-					String cliScriptContent = "login_file " + getDescriptor().getASE_URL() + " " + getDescriptor().getLoginTokenFilePath() + " " + acceptSSLValue + System.lineSeparator();
-					cliScriptContent += "pase " + "\"" + assessmentFile + "\"" + " -folder " + selected + System.lineSeparator();
+					String cliScriptContent = "login_file \"" + getDescriptor().getASE_URL() + "\" \"" + getDescriptor().getLoginTokenFilePath() + "\" " + acceptSSLValue + System.lineSeparator();
+					//cliScriptContent += "pase " + "\"" + assessmentFile + "\"" + " -folder " + selected + System.lineSeparator();
+					cliScriptContent += "pase " + "\"" + TO.toString() + "\"" + " -folder " + selected + System.lineSeparator();
+					
 					logger.println("Executing the following command:" + '\n' + cliScriptContent);
 					AppScanSourceExecutor.execute(run, ws, launcher, installation, node, listener, envVars, cliScriptContent);
     		}
