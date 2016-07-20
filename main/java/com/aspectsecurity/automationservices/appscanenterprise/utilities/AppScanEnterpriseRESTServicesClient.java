@@ -54,15 +54,10 @@ public class AppScanEnterpriseRESTServicesClient {
 	private String password;
 	private String base_url;
 	
-	public static void main(String args[]) {
-		//getFolderListing();
-		//unmarshallASEFolders();
-		//getASESchema();
-		//getFoldersofFolder(1);
-		//logout();
-		AppScanEnterpriseRESTServicesClient client = new AppScanEnterpriseRESTServicesClient("vagrant-2012\\vagrant", "vagrant", "https://vagrant-2012/ase");
-		client.getFolderListing();
-	}
+	/*public static void main(String args[]) {
+		//AppScanEnterpriseRESTServicesClient client = new AppScanEnterpriseRESTServicesClient("vagrant-2012\\vagrant", "vagrant", "https://vagrant-2012/ase");
+		//client.getFolderListing();
+	}*/
 
 	public AppScanEnterpriseRESTServicesClient(String username, String password, String base_url){
 		this.username = username;

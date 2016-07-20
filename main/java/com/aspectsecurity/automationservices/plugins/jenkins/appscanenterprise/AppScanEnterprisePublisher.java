@@ -37,6 +37,7 @@ import javax.servlet.ServletException;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.file.CopyOption;
 import java.nio.file.Files;
@@ -49,6 +50,7 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
     Jenkins j = Jenkins.getInstance();
     
     private PrintStream logger;
+    private PrintStream debugLogger = null;
     
     private String publishTo;
     
@@ -56,14 +58,11 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
     private String installation;
     private boolean disableScan;
     private boolean acceptSSL;
-
-    /**
-     * We'll use this from the <tt>config.jelly</tt>.
-     */
+    private final boolean DEBUG = false;
    
 	@DataBoundConstructor
     public AppScanEnterprisePublisher(String selected, String installation, boolean disableScan, boolean acceptSSL){
-    	this.selected = selected;
+		this.selected = selected;
     	this.installation = installation;
     	this.disableScan = disableScan;
     	this.acceptSSL = acceptSSL;
@@ -83,6 +82,12 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
             throws InterruptedException, IOException {
 
     	logger = listener.getLogger();
+    	if (DEBUG)
+    		{debugLogger = logger;}
+    	else{//if DEBUG disabled output /dev/null
+    		OutputStream nullOut = new OutputStream() {@Override public void write(int b){}};
+    		debugLogger = new PrintStream(nullOut);
+    	}
     	
     	if(!this.disableScan){
     		
@@ -94,11 +99,10 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
     			acceptSSLValue="-acceptssl";
     		}
 				
-    		String asmtFilePath = "C:/AppScan_Assessments/" ;
-    		//String asmtFilePath = "C:/Program Files (x86)/Jenkins/jobs/Webgoat_mvn/builds";
+    		String asmtFilePath = "C:\\Program Files (x86)\\Jenkins\\jobs\\" + envVars.get("JOB_NAME") + "\\builds\\" + envVars.get("BUILD_NUMBER") + "\\";
 		
     		//Search directory for assessment file
-    		logger.println("Searching " + asmtFilePath + " for .ozasmt file");
+    		debugLogger.println("Searching " + asmtFilePath + " for .ozasmt file");
     		File directory = new File(asmtFilePath);
     		File[] extMatches = directory.listFiles(new FilenameFilter()
 				{
@@ -111,30 +115,24 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
 					}
 				});
     		
-    		
-    		String assessmentFile;
+    		//String assessmentFile;
 		
     		if (extMatches.length == 1){
-    			assessmentFile = extMatches[0].getAbsolutePath();
+    			//assessmentFile = extMatches[0].getAbsolutePath();
     			
     			int index = extMatches[0].toString().lastIndexOf("\\");
-    			logger.println("index: " + index);
     			String fileName = extMatches[0].toString().substring(index);
-    			logger.println("fileName: " + fileName);
-    			logger.println("Copying " + extMatches[0] + " from C:\\AppScan Assessments to C:\\Program Files (x86)\\Jenkins\\jobs\\Webgoat_mvn\\builds\\" + envVars.get("BUILD_NUMBER"));
-        		//Path FROM = Paths.get("C:\\AppScan_Assessments");
-    			Path FROM = Paths.get(assessmentFile);
-        		//logger.println("Copying Assessment to C:/Program Files (x86)/Jenkins/jobs/Webgoat_mvn/builds/" + envVars.get("BUILD_NUMBER"));	
+    			//debugLogger.println("Copying " + extMatches[0] + " from C:\\AppScan Assessments to C:\\Program Files (x86)\\Jenkins\\jobs\\Webgoat_mvn\\builds\\" + envVars.get("BUILD_NUMBER"));
+        		
+    			//Path FROM = Paths.get(assessmentFile);	
         		Path TO = Paths.get("C:\\Program Files (x86)\\Jenkins\\jobs\\" + envVars.get("JOB_NAME") + "\\builds\\" + envVars.get("BUILD_NUMBER") + "\\" + fileName);
-        		Files.copy(FROM, TO);
+        		//Files.copy(FROM, TO);
         		
 		
     			//Build the script file we'll pass into the AppScan Source CLI
 					String cliScriptContent = "login_file \"" + getDescriptor().getASE_URL() + "\" \"" + getDescriptor().getLoginTokenFilePath() + "\" " + acceptSSLValue + System.lineSeparator();
-					//cliScriptContent += "pase " + "\"" + assessmentFile + "\"" + " -folder " + selected + System.lineSeparator();
 					cliScriptContent += "pase " + "\"" + TO.toString() + "\"" + " -folder " + selected + System.lineSeparator();
-					
-					logger.println("Executing the following command:" + '\n' + cliScriptContent);
+					debugLogger.println("Executing the following command:" + '\n' + cliScriptContent);
 					AppScanSourceExecutor.execute(run, ws, launcher, installation, node, listener, envVars, cliScriptContent);
     		}
     		else if (extMatches.length > 1)
@@ -149,11 +147,7 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
     
     /**
      * We'll use this from the <tt>config.jelly</tt>.
-     */
-	public String getAvailableFolders(){
-		return initAvailableFolders();
-	}
-	
+     */	
 	public String getPublishTo(){
 		return publishTo;
 	}
@@ -190,6 +184,7 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
 	
     public String initAvailableFolders(){
         	AppScanEnterpriseRESTServicesClient client = new AppScanEnterpriseRESTServicesClient(getDescriptor().getASE_Uname(), getDescriptor().getASE_Pword(), getDescriptor().getASEC_URL());
+        	//AppScanEnterpriseRESTServicesClient client = new AppScanEnterpriseRESTServicesClient("vagrant-2012\\vagrant", "vagrant", "https://vagrant-2012.local/ase");
         	ArrayList<ASEFolder> folders = client.getFolderListing();
         	StringBuilder allFolders = new StringBuilder();
             for (ASEFolder folder : folders) {
@@ -362,9 +357,17 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
             		return FormValidation.ok();
             	}
          
-            return FormValidation.warning("AppScan Enterprise Username is required to publish AppScan Source Assessments.");
+            return FormValidation.warning("AppScan Enterprise Username is required to test the AppScan Enterprise connection.");
         }
         
+        public FormValidation doCheckASE_Pword(@QueryParameter String value)
+                throws IOException, ServletException {
+            	if(!value.equals("".trim())){
+            		return FormValidation.ok();
+            	}
+         
+            return FormValidation.warning("AppScan Enterprise Password is required to test the AppScan Enterprise connection.");
+        }
         
         public FormValidation doCheckPublishTo(@QueryParameter String value)
                 throws IOException, ServletException {

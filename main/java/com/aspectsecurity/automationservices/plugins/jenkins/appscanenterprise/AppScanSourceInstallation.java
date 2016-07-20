@@ -102,7 +102,7 @@ public class AppScanSourceInstallation extends ToolInstallation {
 
         @Override
         public String getDisplayName() {
-            return "AppScan Source for ASE Publisher";
+            return "AppScan Source (ASE Publisher)";
         }
     }
 }

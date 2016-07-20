@@ -18,7 +18,7 @@
         <f:select/>
     </f:entry>
     
-    <f:entry field="disableScan" title="Disable Scan">
+    <f:entry field="disableScan" title="Disable Publish">
 		<f:checkbox default="false" value="${it.disableScan}" />
 	</f:entry>
     
