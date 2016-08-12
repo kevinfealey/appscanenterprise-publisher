@@ -91,6 +91,7 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
     	
     	if(!this.disableScan){
     		
+    	String jenkinsJobsDir = envVars.get("JENKINS_HOME") + "\\jobs";
     	
     		//Implementation happens here
     		//Determine if we need to use acceptssl flag
@@ -99,8 +100,8 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
     			acceptSSLValue="-acceptssl";
     		}
 				
-    		String asmtFilePath = "C:\\Program Files (x86)\\Jenkins\\jobs\\" + envVars.get("JOB_NAME") + "\\builds\\" + envVars.get("BUILD_NUMBER") + "\\";
-		
+    		String asmtFilePath = jenkinsJobsDir + "\\" + envVars.get("JOB_NAME") + "\\builds\\" + envVars.get("BUILD_NUMBER") + "\\";
+
     		//Search directory for assessment file
     		debugLogger.println("Searching " + asmtFilePath + " for .ozasmt file");
     		File directory = new File(asmtFilePath);
@@ -125,7 +126,7 @@ public class AppScanEnterprisePublisher extends Notifier implements SimpleBuildS
     			//debugLogger.println("Copying " + extMatches[0] + " from C:\\AppScan Assessments to C:\\Program Files (x86)\\Jenkins\\jobs\\Webgoat_mvn\\builds\\" + envVars.get("BUILD_NUMBER"));
         		
     			//Path FROM = Paths.get(assessmentFile);	
-        		Path TO = Paths.get("C:\\Program Files (x86)\\Jenkins\\jobs\\" + envVars.get("JOB_NAME") + "\\builds\\" + envVars.get("BUILD_NUMBER") + "\\" + fileName);
+        		Path TO = Paths.get(jenkinsJobsDir + "\\" + envVars.get("JOB_NAME") + "\\builds\\" + envVars.get("BUILD_NUMBER") + "\\" + fileName);
         		//Files.copy(FROM, TO);
         		
 		
